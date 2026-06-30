@@ -144,15 +144,18 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 1; i <= totalFrames; i++) {
       const img = new Image();
       const frameNum = String(i).padStart(3, '0');
-      img.src = `video frames hero/ezgif-frame-${frameNum}.jpg`;
+      img.src = `video%20frames%20hero/ezgif-frame-${frameNum}.jpg`;
       img.onload = () => {
         loadedCount++;
         // Initialize once first 30 frames are loaded to give immediate visual feedback
         if (loadedCount >= 30 && !initialized) {
-          initialized = true;
-          drawFrame(frames[0]);
-          canvas.classList.add('playing');
-          fallbackImg.classList.add('fade-out');
+          const initialFrame = frames.find(f => f.complete && f.naturalWidth !== 0);
+          if (initialFrame) {
+            initialized = true;
+            drawFrame(initialFrame);
+            canvas.classList.add('playing');
+            fallbackImg.classList.add('fade-out');
+          }
         }
       };
       frames.push(img);
@@ -194,11 +197,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     function drawFrame(img) {
+      if (!img || !img.complete || img.naturalWidth === 0) return;
       const w = canvas.width = window.innerWidth;
       const h = canvas.height = window.innerHeight;
       
-      const imgW = img.width;
-      const imgH = img.height;
+      const imgW = img.naturalWidth;
+      const imgH = img.naturalHeight;
       
       const scale = Math.max(w / imgW, h / imgH);
       const newW = imgW * scale;
