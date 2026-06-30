@@ -31,6 +31,26 @@
     <!-- Interactive Background Glow Follower -->
     <div class="cursor-glow"></div>
 
+    <!-- Ripple Trail Container & SVG Filter -->
+    <div class="ripple-container" id="ripple-container"></div>
+    <svg class="hidden" style="display: none;">
+      <filter id="liquid-trail">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.02"
+          numOctaves="2"
+          result="noise"
+        />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="noise"
+          scale="12"
+          xChannelSelector="R"
+          yChannelSelector="G"
+        />
+      </filter>
+    </svg>
+
     <!-- EDIT: Header & Navigation -->
     <header class="header">
       <div class="container header-container">
@@ -40,7 +60,7 @@
             alt="Samarth Gym Crest Logo"
             class="logo-img"
           />
-          <span class="logo-text">Samarth<span class="gold-dot">.</span></span>
+          <span class="logo-text">Samarth Gym<span class="gold-dot">.</span></span>
         </a>
 
         <nav class="nav-menu">
@@ -59,27 +79,38 @@
         </nav>
 
         <button class="menu-toggle" aria-label="Toggle Menu">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
+          <span class="menu-toggle-label">
+            <span class="menu-label-text">MENU</span>
+            <span class="close-label-text">CLOSE</span>
+          </span>
+          <span class="menu-toggle-icon">+</span>
         </button>
       </div>
     </header>
 
-    <!-- Mobile Navigation Overlay -->
-    <div class="mobile-nav">
-      <a href="#about" class="mobile-nav-link">About</a>
-      <a href="#features" class="mobile-nav-link">Pillars</a>
-      <a href="#programs" class="mobile-nav-link">Programs</a>
-      <a href="#pricing" class="mobile-nav-link">Pricing</a>
-      <a href="#location" class="mobile-nav-link">Location</a>
-      <a
-        href="https://wa.me/919850311782?text=Hi%20Samarth%20Gym!%20I'd%20like%20to%20inquire%20about%20memberships."
-        target="_blank"
-        rel="noopener"
-        class="btn btn-gold btn-block"
-        >Join Now</a
-      >
+    <!-- Staggered Sidebar Menu -->
+    <div class="staggered-menu">
+      <div class="menu-overlay"></div>
+      <div class="menu-prelayer menu-prelayer-1"></div>
+      <div class="menu-prelayer menu-prelayer-2"></div>
+      <div class="menu-panel">
+        <ul class="menu-nav">
+          <li><a href="#about">About</a></li>
+          <li><a href="#features">Pillars</a></li>
+          <li><a href="#programs">Programs</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#location">Location</a></li>
+        </ul>
+
+        <div class="menu-socials" style="opacity: 0;">
+          <div class="menu-socials-title">Socials</div>
+          <div class="menu-socials-links">
+            <a href="https://instagram.com/samarthgym" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://facebook.com/samarthgym" target="_blank" rel="noopener">Facebook</a>
+            <a href="https://wa.me/919850311782" target="_blank" rel="noopener">WhatsApp</a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Fixed Viewport Background Video Backdrop -->
@@ -179,18 +210,23 @@
               <span class="label-text">Years of Expertise</span>
             </div>
           </div>
+          <div class="about-secondary-frame">
+            <img
+              src="Media/Screenshot%202026-06-30%20112108.png"
+              alt="Samarth Gym Fitness Family Community"
+              class="about-img-sec"
+            />
+          </div>
         </div>
 
         <div class="about-content reveal-right">
           <p class="section-tag">Our Story</p>
           <h2 class="section-title">
-            More than a gym,<br />a
-            <span class="text-gold">fitness family</span>.
+            More than a gym,<br class="desktop-only" /> a <span class="text-gold">fitness family.</span>
           </h2>
           <p class="section-desc">
             Built on <strong>25+ years</strong> of training expertise under
-            <strong>Sushil Sir</strong>. A motivating space where beginners and
-            athletes alike thrive.
+            <strong>Sushil&nbsp;Sir</strong>. A motivating space where beginners and athletes alike thrive.
           </p>
           <ul class="about-checklist">
             <li>
@@ -369,7 +405,7 @@
           <div class="pillar-card reveal-up" data-delay="0.4">
             <div class="pillar-media">
               <img
-                src="Media/Screenshot%202026-06-30%20112108.png"
+                src="Media/Screenshot%202026-06-30%20112201.png"
                 alt="Samarth Gym Fitness Family Community"
                 class="pillar-img"
                 loading="lazy"
@@ -1243,7 +1279,7 @@
               class="logo-img"
             />
             <span class="logo-text"
-              >Samarth<span class="gold-dot">.</span></span
+              >Samarth Gym<span class="gold-dot">.</span></span
             >
           </a>
 

@@ -16,26 +16,114 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', handleScroll);
   handleScroll(); // Initial check
 
-  // --- 2. Mobile Menu Toggle ---
+  // --- 2. Staggered Sidebar Menu (Mobile Nav) ---
   const menuToggle = document.querySelector('.menu-toggle');
-  const mobileNav = document.querySelector('.mobile-nav');
-  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+  const menuPanel = document.querySelector('.menu-panel');
+  const menuOverlay = document.querySelector('.menu-overlay');
+  const prelayer1 = document.querySelector('.menu-prelayer-1');
+  const prelayer2 = document.querySelector('.menu-prelayer-2');
+  const menuLabelText = document.querySelector('.menu-label-text');
+  const closeLabelText = document.querySelector('.close-label-text');
+  const navItems = document.querySelectorAll('.menu-nav li');
+  const socials = document.querySelector('.menu-socials');
+  
+  let menuIsOpen = false;
+  let menuTimeline = null;
 
-  const toggleMobileMenu = () => {
-    menuToggle.classList.toggle('menu-toggle-active');
-    mobileNav.classList.toggle('mobile-nav-active');
-    // Toggle body scroll lock
-    document.body.style.overflow = mobileNav.classList.contains('mobile-nav-active') ? 'hidden' : '';
+  const openMenu = () => {
+    if (menuTimeline) menuTimeline.kill();
+    menuIsOpen = true;
+    
+    menuToggle.classList.add('is-open');
+    menuOverlay.classList.add('is-active');
+    document.body.style.overflow = 'hidden';
+
+    menuTimeline = gsap.timeline();
+
+    // Swap label: MENU slides up, CLOSE follows
+    menuTimeline.to(menuLabelText, { yPercent: -100, duration: 0.4, ease: 'power3.inOut' }, 0);
+    menuTimeline.to(closeLabelText, { yPercent: -100, duration: 0.4, ease: 'power3.inOut' }, 0);
+
+    // Pre-layers flash in (staggered 80ms apart)
+    menuTimeline.to(prelayer1, { x: 0, duration: 0.6, ease: 'power4.out' }, 0);
+    menuTimeline.to(prelayer2, { x: 0, duration: 0.6, ease: 'power4.out' }, 0.08);
+
+    // Main panel slides in
+    menuTimeline.to(menuPanel, { x: 0, duration: 0.8, ease: 'power4.out' }, 0.15);
+
+    // Pre-layers retreat behind panel
+    menuTimeline.to([prelayer1, prelayer2], { x: '-100%', duration: 0.5, ease: 'power3.in' }, 0.5);
+
+    // Nav items stagger up from below their clip container
+    menuTimeline.fromTo(navItems,
+      { yPercent: 140, rotate: 10, opacity: 0 },
+      { yPercent: 0, rotate: 0, opacity: 1, duration: 0.8, stagger: 0.06, ease: 'power4.out' },
+      0.3
+    );
+
+    // Socials fade in
+    menuTimeline.fromTo(socials,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
+      0.6
+    );
   };
 
-  menuToggle.addEventListener('click', toggleMobileMenu);
+  const closeMenu = () => {
+    if (menuTimeline) menuTimeline.kill();
+    menuIsOpen = false;
 
-  mobileLinks.forEach(link => {
+    menuToggle.classList.remove('is-open');
+    menuOverlay.classList.remove('is-active');
+    document.body.style.overflow = '';
+
+    menuTimeline = gsap.timeline();
+
+    // Swap label back
+    menuTimeline.to(menuLabelText, { yPercent: 0, duration: 0.4, ease: 'power3.inOut' }, 0);
+    menuTimeline.to(closeLabelText, { yPercent: 0, duration: 0.4, ease: 'power3.inOut' }, 0);
+
+    // Socials + items exit
+    menuTimeline.to(socials, { opacity: 0, y: 20, duration: 0.3, ease: 'power3.in' }, 0);
+    menuTimeline.to(navItems, { yPercent: 140, rotate: -5, opacity: 0, duration: 0.4, stagger: 0.03, ease: 'power3.in' }, 0);
+
+    // Panel slides out
+    menuTimeline.to(menuPanel, { x: '100%', duration: 0.6, ease: 'power3.inOut' }, 0.15);
+
+    // Reset pre-layers off-screen
+    menuTimeline.set([prelayer1, prelayer2], { x: '100%' });
+  };
+
+  const toggleMenu = () => {
+    if (menuIsOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  };
+
+  if (menuToggle) {
+    menuToggle.addEventListener('click', toggleMenu);
+  }
+  if (menuOverlay) {
+    menuOverlay.addEventListener('click', closeMenu);
+  }
+
+  // Close menu when a link is clicked
+  const menuLinks = document.querySelectorAll('.menu-nav a');
+  menuLinks.forEach(link => {
     link.addEventListener('click', () => {
-      if (mobileNav.classList.contains('mobile-nav-active')) {
-        toggleMobileMenu();
+      if (menuIsOpen) {
+        closeMenu();
       }
     });
+  });
+
+  // Auto-close menu if resized to desktop width
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 992 && menuIsOpen) {
+      closeMenu();
+    }
   });
 
   // Register GSAP ScrollTrigger
@@ -257,5 +345,79 @@ document.addEventListener('DOMContentLoaded', () => {
       // Activate next slide
       trustSlides[currentSlide].classList.add('active-slide');
     }, 4500);
+  }
+
+  // --- 7. Liquid Ripple Trail ---
+  const POOL_SIZE = 80;
+  const MIN_DISTANCE = 45;
+  const EXPAND_FROM = 10;
+  const EXPAND_TO = 140;
+  const AGE_INCREMENT = 0.025;
+
+  const rippleContainer = document.getElementById('ripple-container');
+  if (rippleContainer) {
+    const ripples = Array.from({ length: POOL_SIZE }, () => ({ active: false, x: 0, y: 0, age: 0 }));
+    const pool = [];
+    let nextIndex = 0;
+    let lastPos = { x: 0, y: 0 };
+    let rafId = null;
+
+    // Create the divs dynamically
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const el = document.createElement('div');
+      el.className = 'ripple-element';
+      rippleContainer.appendChild(el);
+      pool.push(el);
+    }
+
+    const handleMove = (x, y) => {
+      const dx = x - lastPos.x;
+      const dy = y - lastPos.y;
+      if (Math.sqrt(dx * dx + dy * dy) < MIN_DISTANCE) return;
+
+      lastPos = { x, y };
+      const idx = nextIndex % POOL_SIZE;
+      ripples[idx] = { active: true, x, y, age: 0 };
+      nextIndex++;
+    };
+
+    const handleMouseMove = (e) => {
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    const animateRipples = () => {
+      for (let i = 0; i < POOL_SIZE; i++) {
+        const r = ripples[i];
+        const el = pool[i];
+        if (!el) continue;
+
+        if (r.active) {
+          r.age += AGE_INCREMENT;
+          if (r.age >= 1) {
+            r.active = false;
+            el.style.opacity = '0';
+            continue;
+          }
+          const size = EXPAND_FROM + r.age * (EXPAND_TO - EXPAND_FROM);
+          const opacity = (1 - Math.pow(r.age, 1.2)) * 0.35;
+          el.style.width = `${size}px`;
+          el.style.height = `${size}px`;
+          el.style.left = `${r.x - size / 2}px`;
+          el.style.top = `${r.y - size / 2}px`;
+          el.style.opacity = `${opacity}`;
+        }
+      }
+      rafId = requestAnimationFrame(animateRipples);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    rafId = requestAnimationFrame(animateRipples);
   }
 });
